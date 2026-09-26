@@ -12,6 +12,13 @@ No build step. One HTML file, one config file, one SQL file.
 
 Without a backend configured, the app runs in **preview mode** with sample tasters and host PIN `1234`. Nothing is saved.
 
+## Live
+
+- Site: https://mwaymouth.github.io/wineguesser/
+- Host panel: https://mwaymouth.github.io/wineguesser/#host
+- Supabase project ref: `ayojqmmgujptitdpxjzh` (https://supabase.com/dashboard/project/ayojqmmgujptitdpxjzh)
+- Deployed by `.github/workflows/pages.yml` on every push to `main`.
+
 ## Deploy for free (about 15 minutes)
 
 ### 1. Backend: Supabase (free tier)
