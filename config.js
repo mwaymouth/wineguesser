@@ -4,7 +4,7 @@
 // the Project URL and the "anon public" key below.
 window.WINE_CONFIG = {
   supabaseUrl: "https://ayojqmmgujptitdpxjzh.supabase.co",
-  supabaseAnonKey: "",
+  supabaseAnonKey: "sb_publishable_Uk5gvBlBQoV--2skmA6Xaw_JBPmmVTl",
   birthdayName: "Tim",
   eventLabel: "Birthday Blind Tasting",
 };
