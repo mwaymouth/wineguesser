@@ -166,7 +166,7 @@
   .glass .fields { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
   .glass .input { min-height: 46px; font-size: 16px; }
   .result { display: flex; flex-direction: column; gap: 6px; font-size: 15px; }
-  .result-row { display: grid; grid-template-columns: 22px 1fr; gap: 6px; align-items: start; }
+  .result-row { display: grid; grid-template-columns: 30px 1fr; gap: 6px; align-items: start; }
   .result-row .mark { font-weight: 700; }
   .ok { color: var(--good); }
   .no { color: var(--miss); }
@@ -185,7 +185,14 @@
   .host-row b { font-family: var(--display); font-style: italic; font-size: 26px; color: var(--foil); text-align: center; }
   .toggle { display: flex; align-items: center; gap: 12px; padding: 14px 16px; background: var(--barrel); border: 1px solid var(--line); border-radius: var(--radius); cursor: pointer; }
   .toggle input { width: 22px; height: 22px; accent-color: var(--foil); }
-  .select { appearance: none; }
+  .select {
+    appearance: none; -webkit-appearance: none; padding-right: 40px; cursor: pointer;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='9' viewBox='0 0 14 9'%3E%3Cpath d='M1 1l6 6 6-6' fill='none' stroke='%23c9a96e' stroke-width='2'/%3E%3C/svg%3E");
+    background-repeat: no-repeat; background-position: right 14px center;
+  }
+  .select.empty { color: #7a6572; }
+  .select option, .select optgroup { color: #1a1016; background: #fff; }
+  .host-grid .wide { grid-column: 1 / -1; }
 
   .toast {
     position: fixed; left: 50%; top: calc(16px + env(safe-area-inset-top, 0px)); transform: translateX(-50%);
@@ -232,8 +239,8 @@
       <div class="section-head"><h2 id="how-title">How it works</h2></div>
       <ol class="how">
         <li>Sign up with your name and phone number.</li>
-        <li><span>Taste glasses 1 through <span id="how-n">6</span>. For each, guess the grape and the region.</span></li>
-        <li>Seal your sheet. One point for each right grape, one for each right region.</li>
+        <li><span>Taste glasses 1 through <span id="how-n">6</span>. For each, pick the grape and the region.</span></li>
+        <li>Seal your sheet. Right grape: 3 points. Region: 3 for the exact spot, 2 for the right area (Bordeaux for a Saint-Émilion), 1 for just the country.</li>
         <li>At the reveal, the top score wins the bottle.</li>
       </ol>
     </section>
@@ -271,8 +278,6 @@
     </div>
     <div class="progress" id="progress"><span id="progress-text">0 of 6</span><div class="bar"><i id="progress-bar" style="width:0"></i></div></div>
     <form id="sheet-form" class="glasses" novalidate></form>
-    <datalist id="grapes"></datalist>
-    <datalist id="regions"></datalist>
   </main>
 
   <!-- HOST -->
@@ -315,9 +320,38 @@
   var NAME = CFG.birthdayName || "Tim";
   var STORE_KEY = "wineguesser.phone";
 
-  var GRAPES = ["Cabernet Sauvignon","Merlot","Pinot Noir","Syrah / Shiraz","Grenache / Garnacha","Malbec","Zinfandel / Primitivo","Tempranillo","Sangiovese","Nebbiolo","Cabernet Franc","Petite Sirah","Mourvèdre / Monastrell","Barbera","Gamay","Carménère","Red blend","Chardonnay","Sauvignon Blanc","Pinot Grigio / Pinot Gris","Riesling","Chenin Blanc","Viognier","Grüner Veltliner","Albariño","Gewürztraminer","White blend","Rosé","Champagne blend","Prosecco (Glera)"];
-  var REGIONS = ["Napa Valley","Sonoma","Paso Robles","Santa Barbara","Willamette Valley","Washington State","Bordeaux","Burgundy","Rhône Valley","Champagne","Loire Valley","Alsace","Provence","Tuscany","Piedmont","Veneto","Sicily","Rioja","Ribera del Duero","Priorat","Douro","Mosel","Wachau","Mendoza","Maipo Valley","Barossa Valley","McLaren Vale","Marlborough","Central Otago","Stellenbosch"];
-  var SYN = [["syrah","shiraz"],["pinot grigio","pinot gris"],["zinfandel","primitivo","zin"],["grenache","garnacha"],["mourvedre","monastrell"],["tempranillo","tinto fino","tinta de toro"],["cabernet sauvignon","cab sauv","cabernet","cab"],["sauvignon blanc","sauv blanc","fume blanc"],["chardonnay","chard"],["carmenere"],["gruner veltliner","gruner"],["gewurztraminer","gewurz"],["prosecco","glera"],["petite sirah","durif"]];
+  // Dropdown choices. Keep each list at 25 or fewer so the pickers stay quick on a phone.
+  var GRAPES = ["Cabernet Sauvignon","Merlot","Pinot Noir","Syrah / Shiraz","Grenache","Malbec","Zinfandel","Tempranillo","Sangiovese","Nebbiolo","Cabernet Franc","Gamay","Red blend","Chardonnay","Sauvignon Blanc","Pinot Grigio / Pinot Gris","Riesling","Chenin Blanc","Viognier","Grüner Veltliner","Albariño","Gewürztraminer","White blend","Rosé","Sparkling"];
+  // Regions carry a country and, where it matters, a parent region in this same list.
+  // Scoring: exact pick = POINTS.region, parent/child/sibling of the answer = POINTS.area, same country = POINTS.country.
+  var REGIONS = [
+    { name: "Bordeaux", country: "France" },
+    { name: "Saint-Émilion", country: "France", parent: "Bordeaux" },
+    { name: "Burgundy", country: "France" },
+    { name: "Rhône Valley", country: "France" },
+    { name: "Loire Valley", country: "France" },
+    { name: "Champagne", country: "France" },
+    { name: "France (elsewhere)", country: "France" },
+    { name: "Tuscany", country: "Italy" },
+    { name: "Piedmont", country: "Italy" },
+    { name: "Italy (elsewhere)", country: "Italy" },
+    { name: "Rioja", country: "Spain" },
+    { name: "Spain (elsewhere)", country: "Spain" },
+    { name: "Napa Valley", country: "USA" },
+    { name: "Sonoma", country: "USA" },
+    { name: "Lake County", country: "USA" },
+    { name: "Central Coast (Paso Robles)", country: "USA" },
+    { name: "Oregon (Willamette)", country: "USA" },
+    { name: "Washington State", country: "USA" },
+    { name: "USA (elsewhere)", country: "USA" },
+    { name: "Barossa Valley", country: "Australia" },
+    { name: "Victoria (Pyrenees, Yarra)", country: "Australia" },
+    { name: "Australia (elsewhere)", country: "Australia" },
+    { name: "New Zealand (Marlborough)", country: "New Zealand" },
+    { name: "Argentina (Mendoza)", country: "Argentina" },
+    { name: "Somewhere else", country: "Other" }
+  ];
+  var POINTS = { grape: 3, region: 3, area: 2, country: 1 };
 
   // ---------- data layer ----------
   function rpc(fn, args) {
@@ -341,18 +375,18 @@
       pin: "1234",
       settings: { wineCount: 6, revealed: false, prize: "a very nice bottle of wine",
         answers: [
-          { grape: "Pinot Noir", region: "Willamette Valley / Oregon" },
-          { grape: "Sauvignon Blanc", region: "Marlborough / New Zealand" },
-          { grape: "Malbec", region: "Mendoza / Argentina" },
-          { grape: "Sangiovese", region: "Tuscany / Chianti" },
-          { grape: "Syrah", region: "Barossa Valley / Australia" },
-          { grape: "Cabernet Sauvignon", region: "Napa Valley / California" }
+          { grape: "Pinot Noir", region: "Oregon (Willamette)" },
+          { grape: "Sauvignon Blanc", region: "New Zealand (Marlborough)" },
+          { grape: "Malbec", region: "Argentina (Mendoza)" },
+          { grape: "Sangiovese", grape2: "Red blend", region: "Tuscany" },
+          { grape: "Syrah / Shiraz", region: "Barossa Valley" },
+          { grape: "Cabernet Sauvignon", region: "Napa Valley" }
         ] },
       players: {
-        "15550000001": { name: "Jess M.", sample: true, submittedAt: mins(42), guesses: [["Pinot Noir","Burgundy"],["Sauvignon Blanc","Marlborough"],["Malbec","Mendoza"],["Merlot","Tuscany"],["Shiraz","Barossa"],["Cabernet Sauvignon","Napa"]] },
-        "15550000002": { name: "Dev P.", sample: true, submittedAt: mins(31), guesses: [["Gamay","Beaujolais"],["Sauvignon Blanc","Loire Valley"],["Malbec","Mendoza"],["Sangiovese","Tuscany"],["Grenache","Rhône"],["Cab","Sonoma"]] },
-        "15550000003": { name: "Rosa K.", sample: true, submittedAt: mins(19), guesses: [["Pinot Noir","Willamette"],["Chardonnay","Burgundy"],["Tempranillo","Rioja"],["Sangiovese","Chianti"],["Syrah","Rhône Valley"],["Cabernet Sauvignon","Bordeaux"]] },
-        "15550000004": { name: "Marcus L.", sample: true, submittedAt: mins(6), guesses: [["Pinot Noir","Sonoma"],["Pinot Grigio","Veneto"],["Malbec","Mendoza"],["Barbera","Piedmont"],["Shiraz","Barossa Valley"],["Merlot","Napa Valley"]] }
+        "15550000001": { name: "Jess M.", sample: true, submittedAt: mins(42), guesses: [["Pinot Noir","Burgundy"],["Sauvignon Blanc","New Zealand (Marlborough)"],["Malbec","Argentina (Mendoza)"],["Merlot","Tuscany"],["Syrah / Shiraz","Barossa Valley"],["Cabernet Sauvignon","Napa Valley"]] },
+        "15550000002": { name: "Dev P.", sample: true, submittedAt: mins(31), guesses: [["Gamay","France (elsewhere)"],["Sauvignon Blanc","Loire Valley"],["Malbec","Argentina (Mendoza)"],["Sangiovese","Tuscany"],["Grenache","Rhône Valley"],["Cabernet Sauvignon","Sonoma"]] },
+        "15550000003": { name: "Rosa K.", sample: true, submittedAt: mins(19), guesses: [["Pinot Noir","Oregon (Willamette)"],["Chardonnay","Burgundy"],["Tempranillo","Rioja"],["Red blend","Tuscany"],["Syrah / Shiraz","Rhône Valley"],["Cabernet Sauvignon","Bordeaux"]] },
+        "15550000004": { name: "Marcus L.", sample: true, submittedAt: mins(6), guesses: [["Pinot Noir","Sonoma"],["Pinot Grigio / Pinot Gris","Italy (elsewhere)"],["Malbec","Argentina (Mendoza)"],["Nebbiolo","Piedmont"],["Syrah / Shiraz","Barossa Valley"],["Merlot","Napa Valley"]] }
       }
     };
     function toObj(g) { return (g || []).map(function (p) { return Array.isArray(p) ? { grape: p[0], region: p[1] } : p; }); }
@@ -416,29 +450,52 @@
   function normPhone(s) { var d = String(s || "").replace(/\D/g, ""); if (d.length === 10) d = "1" + d; return d; }
   function prettyPhone(d) { var m = /^1?(\d{3})(\d{3})(\d{4})$/.exec(d); return m ? "(" + m[1] + ") " + m[2] + "-" + m[3] : d; }
   function norm(s) { return String(s || "").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/[^a-z0-9 ]/g, " ").replace(/\s+/g, " ").trim(); }
-  function canon(s) { s = norm(s); for (var i = 0; i < SYN.length; i++) if (SYN[i].indexOf(s) !== -1) return SYN[i][0]; return s; }
-  function alts(answer) { return String(answer || "").split(/[\/,]/).map(norm).filter(Boolean); }
-  function grapeOk(g, a) {
-    var cg = canon(g); if (!cg) return false;
-    return String(a || "").split("/").some(function (x) { return canon(x) === cg; }) || canon(a) === cg;
+  function regionInfo(name) {
+    var n = norm(name); if (!n) return null;
+    for (var i = 0; i < REGIONS.length; i++) if (norm(REGIONS[i].name) === n) return REGIONS[i];
+    return null;
   }
-  function regionOk(g, a) {
-    var ng = norm(g); if (!ng) return false;
-    return alts(a).some(function (x) {
-      if (x === ng) return true;
-      var s = x.length < ng.length ? x : ng, l = x.length < ng.length ? ng : x;
-      return s.length >= 4 && (" " + l + " ").indexOf(" " + s) !== -1;
-    });
+  function grapePts(g, a) {
+    var ng = norm(g); if (!ng || !a) return 0;
+    return ng === norm(a.grape) || (a.grape2 && ng === norm(a.grape2)) ? POINTS.grape : 0;
   }
+  function regionPts(g, a) {
+    if (!a) return 0;
+    var G = regionInfo(g), A = regionInfo(a.region); if (!G || !A) return 0;
+    if (G.name === A.name) return POINTS.region;
+    if (G.parent === A.name || A.parent === G.name || (G.parent && G.parent === A.parent)) return POINTS.area;
+    if (G.country === A.country) return POINTS.country;
+    return 0;
+  }
+  function maxPts(n) { return n * (POINTS.grape + POINTS.region); }
   function scoreOf(guesses, answers) {
     var s = 0;
     (answers || []).forEach(function (a, i) {
       var g = (guesses || [])[i] || {};
-      if (a && grapeOk(g.grape, a.grape)) s++;
-      if (a && regionOk(g.region, a.region)) s++;
+      s += grapePts(g.grape, a) + regionPts(g.region, a);
     });
     return s;
   }
+  function answerGrapeText(a) { return (a.grape || "—") + (a.grape2 ? " or " + a.grape2 : ""); }
+  // Dropdown builders. A value that is not in the list (e.g. an old free-text guess) shows as unpicked.
+  function grapeSelect(id, value, label, placeholder) {
+    var sel = el("select", { cls: "input select", id: id, "aria-label": label });
+    sel.appendChild(el("option", { value: "", text: placeholder }));
+    GRAPES.forEach(function (g) { sel.appendChild(el("option", { value: g, text: g })); });
+    sel.value = value || ""; markEmpty(sel); return sel;
+  }
+  function regionSelect(id, value, label, placeholder) {
+    var sel = el("select", { cls: "input select", id: id, "aria-label": label });
+    sel.appendChild(el("option", { value: "", text: placeholder }));
+    var groups = {}, order = [];
+    REGIONS.forEach(function (r) {
+      if (!groups[r.country]) { groups[r.country] = el("optgroup", { label: r.country }); order.push(r.country); }
+      groups[r.country].appendChild(el("option", { value: r.name, text: r.name }));
+    });
+    order.forEach(function (c) { sel.appendChild(groups[c]); });
+    sel.value = value || ""; markEmpty(sel); return sel;
+  }
+  function markEmpty(sel) { sel.classList.toggle("empty", !sel.value); }
   function timeOf(iso) { try { return new Date(iso).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }); } catch (e) { return ""; } }
   var toastTimer;
   function toast(msg) { var t = $("toast"); t.textContent = msg; t.hidden = false; clearTimeout(toastTimer); toastTimer = setTimeout(function () { t.hidden = true; }, 2600); }
@@ -466,7 +523,7 @@
     $("stat-tasters").textContent = board.length;
     $("stat-status").textContent = game.revealed ? "Revealed" : "Sealed";
     $("prize-inline").textContent = game.prize || "a very nice bottle of wine";
-    $("board-note").textContent = game.revealed ? "Out of " + game.wineCount * 2 + " points" : "Scores appear at the reveal";
+    $("board-note").textContent = game.revealed ? "Out of " + maxPts(game.wineCount) + " points" : "Scores appear at the reveal";
 
     var cta = $("cta");
     if (!me) cta.textContent = game.revealed ? "Sign in to see your results" : "Join the tasting";
@@ -494,7 +551,7 @@
       var right;
       if (game.revealed) {
         right = el("div", { cls: "right" }, [
-          el("div", { cls: "score" }, [String(r.score), el("small", { text: "/" + game.wineCount * 2 })]),
+          el("div", { cls: "score" }, [String(r.score), el("small", { text: "/" + maxPts(game.wineCount) })]),
           r.score === best && best > 0 ? el("span", { cls: "pill win", text: "Winner" }) : null
         ]);
       } else right = el("span", { cls: "pill sealed", text: "Sealed" });
@@ -514,8 +571,8 @@
 
     $("sheet-title").textContent = game.revealed ? me.name + "'s results" : "Your tasting sheet";
     $("sheet-sub").textContent = game.revealed
-      ? "You scored " + scoreOf(me.guesses, game.answers) + " of " + game.wineCount * 2 + "."
-      : "Grape or blend, then region. Close counts: “Napa” works for Napa Valley.";
+      ? "You scored " + scoreOf(me.guesses, game.answers) + " of " + maxPts(game.wineCount) + "."
+      : "Pick the grape and the region for each glass. The exact spot scores most, but the right country still earns a point.";
     $("progress").hidden = game.revealed;
 
     var form = $("sheet-form"); form.textContent = "";
@@ -525,19 +582,19 @@
       if (game.revealed) {
         var a = (game.answers || [])[i] || {};
         var mine = (me.guesses || [])[i] || {};
-        var gOk = grapeOk(mine.grape, a.grape), rOk = regionOk(mine.region, a.region);
+        var gp = grapePts(mine.grape, a), rp = regionPts(mine.region, a);
+        var mark = function (pts) { return el("span", { cls: "mark " + (pts ? "ok" : "no"), text: pts ? "+" + pts : "✗" }); };
         body = el("div", { cls: "result" }, [
-          el("div", { cls: "result-row" }, [el("span", { cls: "mark " + (gOk ? "ok" : "no"), text: gOk ? "✓" : "✗" }),
-            el("div", {}, [a.grape || "—", el("em", { text: "You said: " + (mine.grape || "nothing") })])]),
-          el("div", { cls: "result-row" }, [el("span", { cls: "mark " + (rOk ? "ok" : "no"), text: rOk ? "✓" : "✗" }),
-            el("div", {}, [(a.region || "—").split("/")[0].trim(), el("em", { text: "You said: " + (mine.region || "nothing") })])])
+          el("div", { cls: "result-row" }, [mark(gp),
+            el("div", {}, [answerGrapeText(a), el("em", { text: "You said: " + (mine.grape || "nothing") })])]),
+          el("div", { cls: "result-row" }, [mark(rp),
+            el("div", {}, [a.region || "—", el("em", { text: "You said: " + (mine.region || "nothing") })])])
         ]);
       } else {
-        var gi = el("input", { cls: "input", id: "g" + i, list: "grapes", placeholder: "Grape", autocomplete: "off", "aria-label": "Glass " + (i + 1) + " grape", maxlength: "60" });
-        var ri = el("input", { cls: "input", id: "r" + i, list: "regions", placeholder: "Region", autocomplete: "off", "aria-label": "Glass " + (i + 1) + " region", maxlength: "60" });
-        gi.value = g.grape; ri.value = g.region;
-        gi.addEventListener("input", function () { draft[i].grape = gi.value; progress(); });
-        ri.addEventListener("input", function () { draft[i].region = ri.value; progress(); });
+        var gi = grapeSelect("g" + i, g.grape, "Glass " + (i + 1) + " grape", "Pick a grape");
+        var ri = regionSelect("r" + i, g.region, "Glass " + (i + 1) + " region", "Pick a region");
+        gi.addEventListener("change", function () { draft[i].grape = gi.value; markEmpty(gi); progress(); });
+        ri.addEventListener("change", function () { draft[i].region = ri.value; markEmpty(ri); progress(); });
         body = el("div", { cls: "fields" }, [gi, ri]);
       }
       form.appendChild(el("div", { cls: "glass" }, [no, body]));
@@ -564,15 +621,21 @@
     box.textContent = "";
     for (var i = 0; i < count; i++) {
       var a = prev[i] || answers[i] || {};
-      var g = el("input", { cls: "input", id: "ha-g" + i, list: "grapes", placeholder: "Grape", autocomplete: "off", "aria-label": "Wine " + (i + 1) + " grape" });
-      var r = el("input", { cls: "input", id: "ha-r" + i, list: "regions", placeholder: "Region", autocomplete: "off", "aria-label": "Wine " + (i + 1) + " region" });
-      g.value = a.grape || ""; r.value = a.region || "";
-      box.appendChild(el("div", { cls: "host-row" }, [el("b", { text: String(i + 1) }), el("div", { cls: "host-grid" }, [g, r])]));
+      var g = grapeSelect("ha-g" + i, a.grape, "Wine " + (i + 1) + " grape", "Grape");
+      var r = regionSelect("ha-r" + i, a.region, "Wine " + (i + 1) + " region", "Region");
+      var g2 = grapeSelect("ha-g2-" + i, a.grape2, "Wine " + (i + 1) + " second accepted grape", "Also accept (optional, for blends)");
+      g2.classList.add("wide");
+      [g, r, g2].forEach(function (x) { x.addEventListener("change", function () { markEmpty(x); }); });
+      box.appendChild(el("div", { cls: "host-row" }, [el("b", { text: String(i + 1) }), el("div", { cls: "host-grid" }, [g, r, g2])]));
     }
   }
   function readAnswers() {
     var out = [], i = 0;
-    while ($("ha-g" + i)) { out.push({ grape: $("ha-g" + i).value.trim(), region: $("ha-r" + i).value.trim() }); i++; }
+    while ($("ha-g" + i)) {
+      var a = { grape: $("ha-g" + i).value, region: $("ha-r" + i).value }, g2 = $("ha-g2-" + i).value;
+      if (g2 && g2 !== a.grape) a.grape2 = g2;
+      out.push(a); i++;
+    }
     return out;
   }
 
@@ -647,8 +710,6 @@
   document.querySelectorAll(".bname").forEach(function (n) { n.textContent = NAME; });
   if (CFG.eventLabel) $("event-label").textContent = CFG.eventLabel;
   $("demo").hidden = LIVE;
-  GRAPES.forEach(function (g) { $("grapes").appendChild(el("option", { value: g })); });
-  REGIONS.forEach(function (r) { $("regions").appendChild(el("option", { value: r })); });
 
   refresh().then(function () {
     var saved = store(STORE_KEY);
