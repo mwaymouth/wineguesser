@@ -352,6 +352,7 @@
     { name: "Somewhere else", country: "Other" }
   ];
   var POINTS = { grape: 3, region: 3, area: 2, country: 1 };
+  var MAX_ALTS = 6; // extra accepted grapes per wine, for blends
 
   // ---------- data layer ----------
   function rpc(fn, args) {
@@ -378,7 +379,7 @@
           { grape: "Pinot Noir", region: "Oregon (Willamette)" },
           { grape: "Sauvignon Blanc", region: "New Zealand (Marlborough)" },
           { grape: "Malbec", region: "Argentina (Mendoza)" },
-          { grape: "Sangiovese", grape2: "Red blend", region: "Tuscany" },
+          { grape: "Sangiovese", alts: ["Red blend"], region: "Tuscany" },
           { grape: "Syrah / Shiraz", region: "Barossa Valley" },
           { grape: "Cabernet Sauvignon", region: "Napa Valley" }
         ] },
@@ -455,9 +456,14 @@
     for (var i = 0; i < REGIONS.length; i++) if (norm(REGIONS[i].name) === n) return REGIONS[i];
     return null;
   }
+  // Every grape the host accepts for a wine: the main one plus any blend partners.
+  function acceptedGrapes(a) {
+    var list = [a.grape].concat(a.alts || [], a.grape2 ? [a.grape2] : []);
+    return list.filter(function (g, i) { return g && list.indexOf(g) === i; });
+  }
   function grapePts(g, a) {
     var ng = norm(g); if (!ng || !a) return 0;
-    return ng === norm(a.grape) || (a.grape2 && ng === norm(a.grape2)) ? POINTS.grape : 0;
+    return acceptedGrapes(a).some(function (x) { return norm(x) === ng; }) ? POINTS.grape : 0;
   }
   function regionPts(g, a) {
     if (!a) return 0;
@@ -476,7 +482,10 @@
     });
     return s;
   }
-  function answerGrapeText(a) { return (a.grape || "—") + (a.grape2 ? " or " + a.grape2 : ""); }
+  function answerGrapeText(a) {
+    var list = acceptedGrapes(a); if (!list.length) return "—";
+    return list.length === 1 ? list[0] : list.slice(0, -1).join(", ") + " or " + list[list.length - 1];
+  }
   // Dropdown builders. A value that is not in the list (e.g. an old free-text guess) shows as unpicked.
   function grapeSelect(id, value, label, placeholder) {
     var sel = el("select", { cls: "input select", id: id, "aria-label": label });
@@ -623,17 +632,25 @@
       var a = prev[i] || answers[i] || {};
       var g = grapeSelect("ha-g" + i, a.grape, "Wine " + (i + 1) + " grape", "Grape");
       var r = regionSelect("ha-r" + i, a.region, "Wine " + (i + 1) + " region", "Region");
-      var g2 = grapeSelect("ha-g2-" + i, a.grape2, "Wine " + (i + 1) + " second accepted grape", "Also accept (optional, for blends)");
-      g2.classList.add("wide");
-      [g, r, g2].forEach(function (x) { x.addEventListener("change", function () { markEmpty(x); }); });
-      box.appendChild(el("div", { cls: "host-row" }, [el("b", { text: String(i + 1) }), el("div", { cls: "host-grid" }, [g, r, g2])]));
+      [g, r].forEach(function (x) { x.addEventListener("change", function () { markEmpty(x); }); });
+      // Blend partners: one picker per accepted grape, plus an empty one so another can always be added.
+      var alts = (a.alts || (a.grape2 ? [a.grape2] : [])).filter(Boolean).slice(0, MAX_ALTS);
+      var rows = alts.length < MAX_ALTS ? alts.concat([""]) : alts;
+      var altEls = rows.map(function (v, k) {
+        var sel = grapeSelect("ha-a" + i + "-" + k, v, "Wine " + (i + 1) + " also accepted grape " + (k + 1), k === 0 ? "Also accept (optional, for blends)" : "Also accept another grape");
+        sel.classList.add("wide");
+        sel.addEventListener("change", function () { drawAnswers(count, []); });
+        return sel;
+      });
+      box.appendChild(el("div", { cls: "host-row" }, [el("b", { text: String(i + 1) }), el("div", { cls: "host-grid" }, [g, r].concat(altEls))]));
     }
   }
   function readAnswers() {
     var out = [], i = 0;
     while ($("ha-g" + i)) {
-      var a = { grape: $("ha-g" + i).value, region: $("ha-r" + i).value }, g2 = $("ha-g2-" + i).value;
-      if (g2 && g2 !== a.grape) a.grape2 = g2;
+      var a = { grape: $("ha-g" + i).value, region: $("ha-r" + i).value }, alts = [], k = 0;
+      while ($("ha-a" + i + "-" + k)) { var v = $("ha-a" + i + "-" + k).value; if (v && v !== a.grape && alts.indexOf(v) === -1) alts.push(v); k++; }
+      if (alts.length) a.alts = alts;
       out.push(a); i++;
     }
     return out;
