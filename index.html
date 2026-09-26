@@ -320,7 +320,7 @@
   var NAME = CFG.birthdayName || "Tim";
   var STORE_KEY = "wineguesser.phone";
 
-  // Dropdown choices. Kept short on purpose: 7 grapes and 10 regions.
+  // Dropdown choices. Kept short on purpose: 7 grapes and 9 regions.
   var GRAPES = ["Cabernet Sauvignon","Merlot","Pinot Noir","Syrah / Shiraz","Grenache","Sauvignon Blanc","Chardonnay"];
   // Regions carry a country and, where it matters, a parent region in this same list.
   // Scoring: exact pick = POINTS.region, parent/child/sibling of the answer = POINTS.area, same country = POINTS.country.
@@ -333,8 +333,7 @@
     { name: "Lake County", country: "USA" },
     { name: "USA (elsewhere)", country: "USA" },
     { name: "Victoria (Pyrenees)", country: "Australia" },
-    { name: "Australia (elsewhere)", country: "Australia" },
-    { name: "Somewhere else", country: "Other" }
+    { name: "Australia (elsewhere)", country: "Australia" }
   ];
   var POINTS = { grape: 3, region: 3, area: 2, country: 1 };
   var MAX_ALTS = 6; // extra accepted grapes per wine, for blends
@@ -369,8 +368,8 @@
         ] },
       players: {
         "15550000001": { name: "Jess M.", sample: true, submittedAt: mins(42), guesses: [["Merlot","Bordeaux"],["Sauvignon Blanc","USA (elsewhere)"],["Syrah / Shiraz","Australia (elsewhere)"],["Cabernet Sauvignon","Napa Valley"],["Grenache","Rhône Valley"]] },
-        "15550000002": { name: "Dev P.", sample: true, submittedAt: mins(31), guesses: [["Cabernet Sauvignon","Napa Valley"],["Chardonnay","France (elsewhere)"],["Syrah / Shiraz","Rhône Valley"],["Merlot","Bordeaux"],["Pinot Noir","Somewhere else"]] },
-        "15550000003": { name: "Rosa K.", sample: true, submittedAt: mins(19), guesses: [["Cabernet Sauvignon","Saint-Émilion"],["Sauvignon Blanc","Somewhere else"],["Pinot Noir","Australia (elsewhere)"],["Cabernet Sauvignon","USA (elsewhere)"],["Syrah / Shiraz","France (elsewhere)"]] },
+        "15550000002": { name: "Dev P.", sample: true, submittedAt: mins(31), guesses: [["Cabernet Sauvignon","Napa Valley"],["Chardonnay","France (elsewhere)"],["Syrah / Shiraz","Rhône Valley"],["Merlot","Bordeaux"],["Pinot Noir","Australia (elsewhere)"]] },
+        "15550000003": { name: "Rosa K.", sample: true, submittedAt: mins(19), guesses: [["Cabernet Sauvignon","Saint-Émilion"],["Sauvignon Blanc","France (elsewhere)"],["Pinot Noir","Australia (elsewhere)"],["Cabernet Sauvignon","USA (elsewhere)"],["Syrah / Shiraz","France (elsewhere)"]] },
         "15550000004": { name: "Marcus L.", sample: true, submittedAt: mins(6), guesses: [["Pinot Noir","France (elsewhere)"],["Chardonnay","Napa Valley"],["Grenache","Victoria (Pyrenees)"],["Merlot","Lake County"],["Grenache","Bordeaux"]] }
       }
     };

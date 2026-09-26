@@ -8,7 +8,7 @@ No build step. One HTML file, one config file, one SQL file.
 
 - **Guests**: open the link, tap *Join the tasting*, enter name + phone, fill in the sheet, tap *Seal my guesses*. The phone number is only used to sign back in on the same or another device. It is never shown to anyone.
 - **Host (you)**: tap *Host* at the bottom (or open `/#host`), enter the PIN, set the number of wines and the answers, and tick *Reveal* when everyone is done. Reveal locks guesses and shows scores.
-- **Scoring**: guests pick from short dropdowns (7 grapes, 10 regions grouped by country). Right grape: 3 points; for blends the host can list every grape that should count. Region: 3 for the exact pick, 2 for the right area (Bordeaux for a Saint-Émilion, or the reverse), 1 for just the right country. Max 6 per glass.
+- **Scoring**: guests pick from short dropdowns (7 grapes, 9 regions grouped by country). Right grape: 3 points; for blends the host can list every grape that should count. Region: 3 for the exact pick, 2 for the right area (Bordeaux for a Saint-Émilion, or the reverse), 1 for just the right country. Max 6 per glass.
 
 Without a backend configured, the app runs in **preview mode** with sample tasters and host PIN `1234`. Nothing is saved.
 
