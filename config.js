@@ -3,7 +3,7 @@
 // To go live: create a free Supabase project, run schema.sql, then paste
 // the Project URL and the "anon public" key below.
 window.WINE_CONFIG = {
-  supabaseUrl: "",
+  supabaseUrl: "https://ayojqmmgujptitdpxjzh.supabase.co",
   supabaseAnonKey: "",
   birthdayName: "Tim",
   eventLabel: "Birthday Blind Tasting",
