@@ -320,35 +320,20 @@
   var NAME = CFG.birthdayName || "Tim";
   var STORE_KEY = "wineguesser.phone";
 
-  // Dropdown choices. Keep each list at 25 or fewer so the pickers stay quick on a phone.
-  var GRAPES = ["Cabernet Sauvignon","Merlot","Pinot Noir","Syrah / Shiraz","Grenache","Malbec","Zinfandel","Tempranillo","Sangiovese","Nebbiolo","Cabernet Franc","Gamay","Red blend","Chardonnay","Sauvignon Blanc","Pinot Grigio / Pinot Gris","Riesling","Chenin Blanc","Viognier","Grüner Veltliner","Albariño","Gewürztraminer","White blend","Rosé","Sparkling"];
+  // Dropdown choices. Kept short on purpose: 7 grapes and 10 regions.
+  var GRAPES = ["Cabernet Sauvignon","Merlot","Pinot Noir","Syrah / Shiraz","Grenache","Sauvignon Blanc","Chardonnay"];
   // Regions carry a country and, where it matters, a parent region in this same list.
   // Scoring: exact pick = POINTS.region, parent/child/sibling of the answer = POINTS.area, same country = POINTS.country.
   var REGIONS = [
     { name: "Bordeaux", country: "France" },
     { name: "Saint-Émilion", country: "France", parent: "Bordeaux" },
-    { name: "Burgundy", country: "France" },
     { name: "Rhône Valley", country: "France" },
-    { name: "Loire Valley", country: "France" },
-    { name: "Champagne", country: "France" },
     { name: "France (elsewhere)", country: "France" },
-    { name: "Tuscany", country: "Italy" },
-    { name: "Piedmont", country: "Italy" },
-    { name: "Italy (elsewhere)", country: "Italy" },
-    { name: "Rioja", country: "Spain" },
-    { name: "Spain (elsewhere)", country: "Spain" },
     { name: "Napa Valley", country: "USA" },
-    { name: "Sonoma", country: "USA" },
     { name: "Lake County", country: "USA" },
-    { name: "Central Coast (Paso Robles)", country: "USA" },
-    { name: "Oregon (Willamette)", country: "USA" },
-    { name: "Washington State", country: "USA" },
     { name: "USA (elsewhere)", country: "USA" },
-    { name: "Barossa Valley", country: "Australia" },
-    { name: "Victoria (Pyrenees, Yarra)", country: "Australia" },
+    { name: "Victoria (Pyrenees)", country: "Australia" },
     { name: "Australia (elsewhere)", country: "Australia" },
-    { name: "New Zealand (Marlborough)", country: "New Zealand" },
-    { name: "Argentina (Mendoza)", country: "Argentina" },
     { name: "Somewhere else", country: "Other" }
   ];
   var POINTS = { grape: 3, region: 3, area: 2, country: 1 };
@@ -374,20 +359,19 @@
     var mins = function (m) { return new Date(Date.now() - m * 60000).toISOString(); };
     var db = {
       pin: "1234",
-      settings: { wineCount: 6, revealed: false, prize: "a very nice bottle of wine",
+      settings: { wineCount: 5, revealed: false, prize: "a very nice bottle of wine",
         answers: [
-          { grape: "Pinot Noir", region: "Oregon (Willamette)" },
-          { grape: "Sauvignon Blanc", region: "New Zealand (Marlborough)" },
-          { grape: "Malbec", region: "Argentina (Mendoza)" },
-          { grape: "Sangiovese", alts: ["Red blend"], region: "Tuscany" },
-          { grape: "Syrah / Shiraz", region: "Barossa Valley" },
-          { grape: "Cabernet Sauvignon", region: "Napa Valley" }
+          { grape: "Merlot", alts: ["Cabernet Sauvignon"], region: "Saint-Émilion" },
+          { grape: "Sauvignon Blanc", region: "Lake County" },
+          { grape: "Syrah / Shiraz", region: "Victoria (Pyrenees)" },
+          { grape: "Cabernet Sauvignon", region: "Napa Valley" },
+          { grape: "Grenache", alts: ["Syrah / Shiraz"], region: "Rhône Valley" }
         ] },
       players: {
-        "15550000001": { name: "Jess M.", sample: true, submittedAt: mins(42), guesses: [["Pinot Noir","Burgundy"],["Sauvignon Blanc","New Zealand (Marlborough)"],["Malbec","Argentina (Mendoza)"],["Merlot","Tuscany"],["Syrah / Shiraz","Barossa Valley"],["Cabernet Sauvignon","Napa Valley"]] },
-        "15550000002": { name: "Dev P.", sample: true, submittedAt: mins(31), guesses: [["Gamay","France (elsewhere)"],["Sauvignon Blanc","Loire Valley"],["Malbec","Argentina (Mendoza)"],["Sangiovese","Tuscany"],["Grenache","Rhône Valley"],["Cabernet Sauvignon","Sonoma"]] },
-        "15550000003": { name: "Rosa K.", sample: true, submittedAt: mins(19), guesses: [["Pinot Noir","Oregon (Willamette)"],["Chardonnay","Burgundy"],["Tempranillo","Rioja"],["Red blend","Tuscany"],["Syrah / Shiraz","Rhône Valley"],["Cabernet Sauvignon","Bordeaux"]] },
-        "15550000004": { name: "Marcus L.", sample: true, submittedAt: mins(6), guesses: [["Pinot Noir","Sonoma"],["Pinot Grigio / Pinot Gris","Italy (elsewhere)"],["Malbec","Argentina (Mendoza)"],["Nebbiolo","Piedmont"],["Syrah / Shiraz","Barossa Valley"],["Merlot","Napa Valley"]] }
+        "15550000001": { name: "Jess M.", sample: true, submittedAt: mins(42), guesses: [["Merlot","Bordeaux"],["Sauvignon Blanc","USA (elsewhere)"],["Syrah / Shiraz","Australia (elsewhere)"],["Cabernet Sauvignon","Napa Valley"],["Grenache","Rhône Valley"]] },
+        "15550000002": { name: "Dev P.", sample: true, submittedAt: mins(31), guesses: [["Cabernet Sauvignon","Napa Valley"],["Chardonnay","France (elsewhere)"],["Syrah / Shiraz","Rhône Valley"],["Merlot","Bordeaux"],["Pinot Noir","Somewhere else"]] },
+        "15550000003": { name: "Rosa K.", sample: true, submittedAt: mins(19), guesses: [["Cabernet Sauvignon","Saint-Émilion"],["Sauvignon Blanc","Somewhere else"],["Pinot Noir","Australia (elsewhere)"],["Cabernet Sauvignon","USA (elsewhere)"],["Syrah / Shiraz","France (elsewhere)"]] },
+        "15550000004": { name: "Marcus L.", sample: true, submittedAt: mins(6), guesses: [["Pinot Noir","France (elsewhere)"],["Chardonnay","Napa Valley"],["Grenache","Victoria (Pyrenees)"],["Merlot","Lake County"],["Grenache","Bordeaux"]] }
       }
     };
     function toObj(g) { return (g || []).map(function (p) { return Array.isArray(p) ? { grape: p[0], region: p[1] } : p; }); }
