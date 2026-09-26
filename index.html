@@ -1,0 +1,665 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#1a1119">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<script src="config.js"></script>
+<!--APP-START-->
+<title>Tim's Blind Tasting</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,500;0,6..96,700;1,6..96,500&family=Figtree:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+  :root {
+    color-scheme: dark;
+    --cellar: #1a1119;
+    --barrel: #241722;
+    --raised: #2f1f2c;
+    --line: #432c3f;
+    --paper: #f4ecef;
+    --dust: #b09ba7;
+    --foil: #d8b46a;
+    --foil-deep: #a9863f;
+    --claret: #c2566e;
+    --good: #86bf93;
+    --miss: #e08a85;
+    --display: "Bodoni Moda", "Didot", "Bodoni 72", Georgia, serif;
+    --body: "Figtree", system-ui, -apple-system, "Segoe UI", sans-serif;
+    --mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+    --radius: 14px;
+  }
+  * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+  html, body { background: var(--cellar); }
+  body {
+    margin: 0;
+    color: var(--paper);
+    font: 16px/1.5 var(--body);
+    -webkit-font-smoothing: antialiased;
+    padding-inline: 16px;
+    padding-block: 0 calc(96px + env(safe-area-inset-bottom, 0px));
+    min-height: 100vh;
+    background:
+      radial-gradient(120% 60% at 50% -10%, #3b1f33 0%, transparent 60%),
+      var(--cellar);
+  }
+  .wrap { max-width: 520px; margin: 0 auto; display: flex; flex-direction: column; gap: 28px; }
+  h1, h2, h3 { margin: 0; text-wrap: balance; }
+  p { margin: 0; }
+  button, input, select { font: inherit; color: inherit; }
+  :focus-visible { outline: 2px solid var(--foil); outline-offset: 2px; }
+
+  .demo {
+    margin-top: 12px;
+    font-size: 13px;
+    color: var(--dust);
+    border: 1px dashed var(--line);
+    border-radius: 10px;
+    padding: 8px 12px;
+  }
+  .demo b { color: var(--foil); font-weight: 600; }
+
+  /* Hero: Tim's profile */
+  .hero { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 12px; padding-top: 28px; }
+  .seal {
+    width: 112px; height: 112px; border-radius: 50%;
+    display: grid; place-items: center;
+    background:
+      radial-gradient(circle at 35% 30%, #4a2a41 0%, var(--barrel) 70%);
+    box-shadow:
+      0 0 0 2px var(--foil),
+      0 0 0 7px var(--cellar),
+      0 0 0 8px var(--foil-deep),
+      0 18px 40px -12px rgba(0,0,0,.7);
+    font-family: var(--display);
+    font-style: italic;
+    font-size: 64px;
+    color: var(--foil);
+    line-height: 1;
+  }
+  .seal span { transform: translateY(-4px); }
+  .eyebrow { font-size: 12px; letter-spacing: .18em; text-transform: uppercase; color: var(--foil); font-weight: 600; margin-top: 10px; }
+  .hero h1 { font-family: var(--display); font-weight: 500; font-style: italic; font-size: clamp(56px, 18vw, 84px); line-height: .95; letter-spacing: -.01em; }
+  .lede { color: var(--dust); max-width: 34ch; }
+  .stats { display: grid; grid-template-columns: repeat(3, 1fr); width: 100%; margin: 8px 0 0; border-block: 1px solid var(--line); }
+  .stats div { padding: 12px 4px; display: flex; flex-direction: column; gap: 2px; }
+  .stats div + div { border-left: 1px solid var(--line); }
+  .stats dt { font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--dust); }
+  .stats dd { margin: 0; font-family: var(--mono); font-size: 20px; font-variant-numeric: tabular-nums; }
+  .stats dd.word { font-family: var(--body); font-weight: 600; font-size: 17px; line-height: 30px; }
+
+  .who { display: flex; justify-content: center; gap: 8px; font-size: 14px; color: var(--dust); flex-wrap: wrap; }
+  .link { background: none; border: 0; padding: 0; color: var(--foil); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+
+  .btn {
+    appearance: none; border: 0; cursor: pointer;
+    min-height: 52px; border-radius: 999px; padding: 0 24px;
+    font-weight: 700; font-size: 16px; letter-spacing: .01em;
+    background: var(--foil); color: #24160c;
+    box-shadow: 0 10px 24px -12px rgba(216,180,106,.8);
+    width: 100%;
+  }
+  .btn:active { transform: translateY(1px); }
+  .btn[disabled] { opacity: .5; cursor: default; }
+  .btn.ghost { background: transparent; color: var(--paper); border: 1px solid var(--line); box-shadow: none; }
+
+  /* Board */
+  .section-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 10px; }
+  .section-head h2 { font-family: var(--display); font-weight: 500; font-size: 26px; }
+  .section-head span { font-size: 13px; color: var(--dust); }
+  .board { list-style: none; margin: 0; padding: 0; background: var(--barrel); border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; }
+  .board li { display: grid; grid-template-columns: 36px 1fr auto; align-items: center; gap: 12px; padding: 14px 16px; }
+  .board li + li { border-top: 1px solid var(--line); }
+  .rank { font-family: var(--mono); font-size: 14px; color: var(--dust); font-variant-numeric: tabular-nums; }
+  .avatar { width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; background: var(--raised); font-weight: 700; font-size: 14px; color: var(--foil); border: 1px solid var(--line); }
+  .pname { font-weight: 600; overflow-wrap: anywhere; display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+  .psub { font-size: 13px; color: var(--dust); font-family: var(--mono); }
+  .right { text-align: right; }
+  .score { font-family: var(--mono); font-size: 18px; font-weight: 600; font-variant-numeric: tabular-nums; }
+  .score small { color: var(--dust); font-weight: 400; font-size: 13px; }
+  .pill { font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; padding: 3px 8px; border-radius: 999px; background: var(--raised); color: var(--dust); border: 1px solid var(--line); white-space: nowrap; }
+  .pill.sealed { color: var(--foil); border-color: #5c4526; }
+  .pill.win { background: var(--foil); color: #24160c; border-color: var(--foil); }
+  .pill.you { color: var(--claret); border-color: #6b2d3c; }
+  .pill.sample { color: var(--dust); }
+  .board li.top { background: linear-gradient(90deg, rgba(216,180,106,.12), transparent 70%); }
+  .empty { padding: 24px 16px; color: var(--dust); text-align: center; }
+
+  .how { display: grid; gap: 10px; color: var(--dust); font-size: 15px; padding: 0; margin: 0; list-style: none; counter-reset: s; }
+  .how li { display: grid; grid-template-columns: 28px 1fr; gap: 8px; counter-increment: s; }
+  .how li::before { content: counter(s); font-family: var(--mono); color: var(--foil); }
+
+  /* Forms */
+  .top-bar { display: flex; align-items: center; gap: 12px; padding-top: 18px; }
+  .back { background: none; border: 1px solid var(--line); color: var(--paper); border-radius: 999px; min-height: 40px; padding: 0 14px; cursor: pointer; font-size: 14px; }
+  .page-title { font-family: var(--display); font-weight: 500; font-size: 34px; line-height: 1.1; }
+  .page-sub { color: var(--dust); margin-top: 6px; }
+  .field { display: flex; flex-direction: column; gap: 6px; }
+  .field label { font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: var(--dust); font-weight: 600; }
+  .input {
+    width: 100%; min-height: 50px; padding: 0 14px;
+    background: var(--cellar); border: 1px solid var(--line); border-radius: 10px;
+    font-size: 17px; color: var(--paper);
+  }
+  .input::placeholder { color: #7a6572; }
+  .input:focus { border-color: var(--foil); outline: none; }
+  .note { font-size: 13px; color: var(--dust); }
+  .stack { display: flex; flex-direction: column; gap: 16px; }
+  .error { color: var(--miss); font-size: 14px; min-height: 1.2em; }
+
+  /* Tasting sheet */
+  .progress { display: flex; align-items: center; gap: 12px; font-size: 14px; color: var(--dust); }
+  .bar { flex: 1; height: 4px; background: var(--raised); border-radius: 4px; overflow: hidden; }
+  .bar i { display: block; height: 100%; background: var(--foil); border-radius: 4px; transition: width .3s; }
+  .glasses { display: flex; flex-direction: column; gap: 12px; }
+  .glass {
+    display: grid; grid-template-columns: 64px 1fr; gap: 14px;
+    background: var(--barrel); border: 1px solid var(--line); border-radius: var(--radius);
+    padding: 16px;
+  }
+  .glass-no { display: flex; flex-direction: column; align-items: center; gap: 2px; padding-top: 2px; }
+  .glass-no small { font-size: 10px; letter-spacing: .18em; text-transform: uppercase; color: var(--dust); }
+  .glass-no b { font-family: var(--display); font-style: italic; font-weight: 500; font-size: 44px; line-height: 1; color: var(--foil); }
+  .glass .fields { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+  .glass .input { min-height: 46px; font-size: 16px; }
+  .result { display: flex; flex-direction: column; gap: 6px; font-size: 15px; }
+  .result-row { display: grid; grid-template-columns: 22px 1fr; gap: 6px; align-items: start; }
+  .result-row .mark { font-weight: 700; }
+  .ok { color: var(--good); }
+  .no { color: var(--miss); }
+  .result-row em { font-style: normal; color: var(--dust); font-size: 13px; display: block; }
+
+  .dock {
+    position: fixed; left: 0; right: 0; bottom: 0;
+    padding: 12px 16px calc(12px + env(safe-area-inset-bottom, 0px));
+    background: linear-gradient(to top, var(--cellar) 60%, transparent);
+  }
+  .dock .inner { max-width: 520px; margin: 0 auto; }
+
+  /* Host */
+  .host-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .host-row { display: grid; grid-template-columns: 34px 1fr; gap: 10px; align-items: center; }
+  .host-row b { font-family: var(--display); font-style: italic; font-size: 26px; color: var(--foil); text-align: center; }
+  .toggle { display: flex; align-items: center; gap: 12px; padding: 14px 16px; background: var(--barrel); border: 1px solid var(--line); border-radius: var(--radius); cursor: pointer; }
+  .toggle input { width: 22px; height: 22px; accent-color: var(--foil); }
+  .select { appearance: none; }
+
+  .toast {
+    position: fixed; left: 50%; top: calc(16px + env(safe-area-inset-top, 0px)); transform: translateX(-50%);
+    background: var(--paper); color: var(--cellar); font-weight: 600; font-size: 15px;
+    padding: 10px 18px; border-radius: 999px; box-shadow: 0 10px 30px rgba(0,0,0,.4);
+    max-width: calc(100% - 32px); z-index: 10;
+  }
+  footer { text-align: center; font-size: 12px; color: #7a6572; padding-top: 8px; }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div id="demo" class="demo" hidden>Preview mode: the tasters below are samples and nothing is saved. Host PIN for trying the reveal: <b>1234</b></div>
+
+  <!-- HOME: Tim's profile + board -->
+  <main id="view-home" class="stack" style="gap:28px">
+    <header class="hero">
+      <div class="seal" aria-hidden="true"><span id="initial">T</span></div>
+      <p class="eyebrow" id="event-label">Birthday Blind Tasting</p>
+      <h1 id="bday-name">Tim</h1>
+      <p class="lede">Taste each numbered glass. Name the grape and where it's from. The sharpest palate takes home <span id="prize-inline">a very nice bottle of wine</span>.</p>
+      <dl class="stats">
+        <div><dt>Glasses</dt><dd id="stat-glasses">6</dd></div>
+        <div><dt>Tasters</dt><dd id="stat-tasters">0</dd></div>
+        <div><dt>Answers</dt><dd id="stat-status" class="word">Sealed</dd></div>
+      </dl>
+    </header>
+
+    <div class="stack" style="gap:12px">
+      <button class="btn" id="cta" type="button">Join the tasting</button>
+      <div class="who" id="who" hidden><span id="who-text"></span><button class="link" id="signout" type="button">Not you?</button></div>
+    </div>
+
+    <section aria-labelledby="board-title">
+      <div class="section-head">
+        <h2 id="board-title">Leaderboard</h2>
+        <span id="board-note">Scores appear at the reveal</span>
+      </div>
+      <ol class="board" id="board"></ol>
+    </section>
+
+    <section aria-labelledby="how-title">
+      <div class="section-head"><h2 id="how-title">How it works</h2></div>
+      <ol class="how">
+        <li>Sign up with your name and phone number.</li>
+        <li><span>Taste glasses 1 through <span id="how-n">6</span>. For each, guess the grape and the region.</span></li>
+        <li>Seal your sheet. One point for each right grape, one for each right region.</li>
+        <li>At the reveal, the top score wins the bottle.</li>
+      </ol>
+    </section>
+    <footer><button class="link" id="host-link" type="button" style="color:#7a6572">Host</button></footer>
+  </main>
+
+  <!-- JOIN -->
+  <main id="view-join" class="stack" hidden>
+    <div class="top-bar"><button class="back" data-go="home" type="button">← Back</button></div>
+    <div>
+      <h2 class="page-title">Join <span class="bname">Tim</span>'s tasting</h2>
+      <p class="page-sub">Already signed up? Use the same number to get back to your sheet.</p>
+    </div>
+    <form id="join-form" class="stack" novalidate>
+      <div class="field">
+        <label for="join-name">Your name</label>
+        <input class="input" id="join-name" autocomplete="name" placeholder="First name and last initial" maxlength="40" required>
+      </div>
+      <div class="field">
+        <label for="join-phone">Phone number</label>
+        <input class="input" id="join-phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="(555) 555-0123" required>
+        <p class="note">Only used to sign you back in. It never shows on the leaderboard.</p>
+      </div>
+      <p class="error" id="join-error" role="alert"></p>
+      <button class="btn" type="submit" id="join-btn">Continue to my sheet</button>
+    </form>
+  </main>
+
+  <!-- SHEET -->
+  <main id="view-sheet" class="stack" hidden>
+    <div class="top-bar"><button class="back" data-go="home" type="button">← Leaderboard</button></div>
+    <div>
+      <h2 class="page-title" id="sheet-title">Your tasting sheet</h2>
+      <p class="page-sub" id="sheet-sub">Grape or blend, then region. Close counts: "Napa" works for Napa Valley.</p>
+    </div>
+    <div class="progress" id="progress"><span id="progress-text">0 of 6</span><div class="bar"><i id="progress-bar" style="width:0"></i></div></div>
+    <form id="sheet-form" class="glasses" novalidate></form>
+    <datalist id="grapes"></datalist>
+    <datalist id="regions"></datalist>
+  </main>
+
+  <!-- HOST -->
+  <main id="view-host" class="stack" hidden>
+    <div class="top-bar"><button class="back" data-go="home" type="button">← Back</button></div>
+    <div>
+      <h2 class="page-title">Host controls</h2>
+      <p class="page-sub">Set the answers, then reveal them when everyone has sealed their sheet.</p>
+    </div>
+    <form id="pin-form" class="stack" novalidate>
+      <div class="field">
+        <label for="host-pin">Host PIN</label>
+        <input class="input" id="host-pin" type="password" inputmode="numeric" autocomplete="off">
+      </div>
+      <p class="error" id="pin-error" role="alert"></p>
+      <button class="btn" type="submit">Unlock</button>
+    </form>
+    <form id="host-form" class="stack" hidden novalidate>
+      <div class="field">
+        <label for="host-count">Number of wines</label>
+        <select class="input select" id="host-count"></select>
+      </div>
+      <p class="note">For regions, separate accepted answers with a slash, like "Napa Valley / California".</p>
+      <div class="stack" id="host-answers" style="gap:10px"></div>
+      <label class="toggle" for="host-reveal"><input type="checkbox" id="host-reveal"> <span><b>Reveal answers and scores</b><br><span class="note">Locks everyone's guesses.</span></span></label>
+      <p class="error" id="host-error" role="alert"></p>
+      <button class="btn" type="submit">Save</button>
+    </form>
+  </main>
+</div>
+
+<div class="dock" id="dock" hidden><div class="inner"><button class="btn" id="seal-btn" type="button">Seal my guesses</button></div></div>
+<div class="toast" id="toast" role="status" hidden></div>
+
+<script>
+(function () {
+  "use strict";
+  var CFG = window.WINE_CONFIG || {};
+  var LIVE = !!(CFG.supabaseUrl && CFG.supabaseAnonKey);
+  var NAME = CFG.birthdayName || "Tim";
+  var STORE_KEY = "wineguesser.phone";
+
+  var GRAPES = ["Cabernet Sauvignon","Merlot","Pinot Noir","Syrah / Shiraz","Grenache / Garnacha","Malbec","Zinfandel / Primitivo","Tempranillo","Sangiovese","Nebbiolo","Cabernet Franc","Petite Sirah","Mourvèdre / Monastrell","Barbera","Gamay","Carménère","Red blend","Chardonnay","Sauvignon Blanc","Pinot Grigio / Pinot Gris","Riesling","Chenin Blanc","Viognier","Grüner Veltliner","Albariño","Gewürztraminer","White blend","Rosé","Champagne blend","Prosecco (Glera)"];
+  var REGIONS = ["Napa Valley","Sonoma","Paso Robles","Santa Barbara","Willamette Valley","Washington State","Bordeaux","Burgundy","Rhône Valley","Champagne","Loire Valley","Alsace","Provence","Tuscany","Piedmont","Veneto","Sicily","Rioja","Ribera del Duero","Priorat","Douro","Mosel","Wachau","Mendoza","Maipo Valley","Barossa Valley","McLaren Vale","Marlborough","Central Otago","Stellenbosch"];
+  var SYN = [["syrah","shiraz"],["pinot grigio","pinot gris"],["zinfandel","primitivo","zin"],["grenache","garnacha"],["mourvedre","monastrell"],["tempranillo","tinto fino","tinta de toro"],["cabernet sauvignon","cab sauv","cabernet","cab"],["sauvignon blanc","sauv blanc","fume blanc"],["chardonnay","chard"],["carmenere"],["gruner veltliner","gruner"],["gewurztraminer","gewurz"],["prosecco","glera"],["petite sirah","durif"]];
+
+  // ---------- data layer ----------
+  function rpc(fn, args) {
+    var base = CFG.supabaseUrl.replace(/\/$/, "");
+    return fetch(base + "/rest/v1/rpc/" + fn, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", apikey: CFG.supabaseAnonKey, Authorization: "Bearer " + CFG.supabaseAnonKey },
+      body: JSON.stringify(args || {})
+    }).then(function (r) {
+      return r.text().then(function (t) {
+        var d; try { d = JSON.parse(t); } catch (e) { d = t; }
+        if (!r.ok) throw new Error((d && d.message) || "Couldn't reach the server. Check your connection and try again.");
+        return d;
+      });
+    });
+  }
+
+  function demoStore() {
+    var mins = function (m) { return new Date(Date.now() - m * 60000).toISOString(); };
+    var db = {
+      pin: "1234",
+      settings: { wineCount: 6, revealed: false, prize: "a very nice bottle of wine",
+        answers: [
+          { grape: "Pinot Noir", region: "Willamette Valley / Oregon" },
+          { grape: "Sauvignon Blanc", region: "Marlborough / New Zealand" },
+          { grape: "Malbec", region: "Mendoza / Argentina" },
+          { grape: "Sangiovese", region: "Tuscany / Chianti" },
+          { grape: "Syrah", region: "Barossa Valley / Australia" },
+          { grape: "Cabernet Sauvignon", region: "Napa Valley / California" }
+        ] },
+      players: {
+        "15550000001": { name: "Jess M.", sample: true, submittedAt: mins(42), guesses: [["Pinot Noir","Burgundy"],["Sauvignon Blanc","Marlborough"],["Malbec","Mendoza"],["Merlot","Tuscany"],["Shiraz","Barossa"],["Cabernet Sauvignon","Napa"]] },
+        "15550000002": { name: "Dev P.", sample: true, submittedAt: mins(31), guesses: [["Gamay","Beaujolais"],["Sauvignon Blanc","Loire Valley"],["Malbec","Mendoza"],["Sangiovese","Tuscany"],["Grenache","Rhône"],["Cab","Sonoma"]] },
+        "15550000003": { name: "Rosa K.", sample: true, submittedAt: mins(19), guesses: [["Pinot Noir","Willamette"],["Chardonnay","Burgundy"],["Tempranillo","Rioja"],["Sangiovese","Chianti"],["Syrah","Rhône Valley"],["Cabernet Sauvignon","Bordeaux"]] },
+        "15550000004": { name: "Marcus L.", sample: true, submittedAt: mins(6), guesses: [["Pinot Noir","Sonoma"],["Pinot Grigio","Veneto"],["Malbec","Mendoza"],["Barbera","Piedmont"],["Shiraz","Barossa Valley"],["Merlot","Napa Valley"]] }
+      }
+    };
+    function toObj(g) { return (g || []).map(function (p) { return Array.isArray(p) ? { grape: p[0], region: p[1] } : p; }); }
+    function clone(x) { return JSON.parse(JSON.stringify(x)); }
+    var wait = function (v) { return new Promise(function (res) { setTimeout(function () { res(clone(v)); }, 180); }); };
+    var fail = function (m) { return new Promise(function (_, rej) { setTimeout(function () { rej(new Error(m)); }, 180); }); };
+    return {
+      getState: function () { var s = db.settings; return wait({ wineCount: s.wineCount, revealed: s.revealed, prize: s.prize, answers: s.revealed ? s.answers : null }); },
+      getBoard: function () {
+        var rows = Object.keys(db.players).map(function (k) { return db.players[k]; })
+          .filter(function (p) { return p.submittedAt; })
+          .sort(function (a, b) { return a.submittedAt < b.submittedAt ? -1 : 1; })
+          .map(function (p) { return { name: p.name, sample: !!p.sample, submittedAt: p.submittedAt, guesses: db.settings.revealed ? toObj(p.guesses) : null }; });
+        return wait(rows);
+      },
+      join: function (name, phone) {
+        var p = db.players[phone] || (db.players[phone] = { name: name, guesses: null, submittedAt: null });
+        p.name = name;
+        return wait({ name: p.name, phone: phone, guesses: toObj(p.guesses), submittedAt: p.submittedAt });
+      },
+      submit: function (phone, guesses) {
+        if (db.settings.revealed) return fail("The answers are out, so guesses are locked");
+        var p = db.players[phone]; if (!p) return fail("Sign up first");
+        p.guesses = guesses; p.submittedAt = new Date().toISOString();
+        return wait({ name: p.name, phone: phone, guesses: p.guesses, submittedAt: p.submittedAt });
+      },
+      hostLoad: function (pin) {
+        if (pin !== db.pin) return fail("Wrong host PIN");
+        return wait({ wineCount: db.settings.wineCount, answers: db.settings.answers, revealed: db.settings.revealed });
+      },
+      hostSave: function (pin, count, answers, revealed) {
+        if (pin !== db.pin) return fail("Wrong host PIN");
+        db.settings.wineCount = count; db.settings.answers = answers; db.settings.revealed = revealed;
+        return wait({ ok: true });
+      }
+    };
+  }
+
+  var api = LIVE ? {
+    getState: function () { return rpc("get_state"); },
+    getBoard: function () { return rpc("get_board"); },
+    join: function (name, phone) { return rpc("join_game", { p_name: name, p_phone: phone }); },
+    submit: function (phone, guesses) { return rpc("submit_guesses", { p_phone: phone, p_guesses: guesses }); },
+    hostLoad: function (pin) { return rpc("host_load", { p_pin: pin }); },
+    hostSave: function (pin, count, answers, revealed) { return rpc("host_save", { p_pin: pin, p_wine_count: count, p_answers: answers, p_revealed: revealed }); }
+  } : demoStore();
+
+  // ---------- helpers ----------
+  var $ = function (id) { return document.getElementById(id); };
+  function el(tag, attrs, kids) {
+    var n = document.createElement(tag);
+    Object.keys(attrs || {}).forEach(function (k) {
+      if (k === "text") n.textContent = attrs[k];
+      else if (k === "cls") n.className = attrs[k];
+      else n.setAttribute(k, attrs[k]);
+    });
+    (kids || []).forEach(function (c) { if (c) n.appendChild(typeof c === "string" ? document.createTextNode(c) : c); });
+    return n;
+  }
+  function store(k, v) { try { if (v === undefined) return localStorage.getItem(k); if (v === null) localStorage.removeItem(k); else localStorage.setItem(k, v); } catch (e) { return null; } }
+  function normPhone(s) { var d = String(s || "").replace(/\D/g, ""); if (d.length === 10) d = "1" + d; return d; }
+  function prettyPhone(d) { var m = /^1?(\d{3})(\d{3})(\d{4})$/.exec(d); return m ? "(" + m[1] + ") " + m[2] + "-" + m[3] : d; }
+  function norm(s) { return String(s || "").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/[^a-z0-9 ]/g, " ").replace(/\s+/g, " ").trim(); }
+  function canon(s) { s = norm(s); for (var i = 0; i < SYN.length; i++) if (SYN[i].indexOf(s) !== -1) return SYN[i][0]; return s; }
+  function alts(answer) { return String(answer || "").split(/[\/,]/).map(norm).filter(Boolean); }
+  function grapeOk(g, a) {
+    var cg = canon(g); if (!cg) return false;
+    return String(a || "").split("/").some(function (x) { return canon(x) === cg; }) || canon(a) === cg;
+  }
+  function regionOk(g, a) {
+    var ng = norm(g); if (!ng) return false;
+    return alts(a).some(function (x) {
+      if (x === ng) return true;
+      var s = x.length < ng.length ? x : ng, l = x.length < ng.length ? ng : x;
+      return s.length >= 4 && (" " + l + " ").indexOf(" " + s) !== -1;
+    });
+  }
+  function scoreOf(guesses, answers) {
+    var s = 0;
+    (answers || []).forEach(function (a, i) {
+      var g = (guesses || [])[i] || {};
+      if (a && grapeOk(g.grape, a.grape)) s++;
+      if (a && regionOk(g.region, a.region)) s++;
+    });
+    return s;
+  }
+  function timeOf(iso) { try { return new Date(iso).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }); } catch (e) { return ""; } }
+  var toastTimer;
+  function toast(msg) { var t = $("toast"); t.textContent = msg; t.hidden = false; clearTimeout(toastTimer); toastTimer = setTimeout(function () { t.hidden = true; }, 2600); }
+
+  // ---------- state ----------
+  var game = { wineCount: 6, revealed: false, prize: "a very nice bottle of wine", answers: null };
+  var board = [];
+  var me = null;
+  var hostPin = null;
+  var view = "home";
+
+  function show(v) {
+    view = v;
+    ["home", "join", "sheet", "host"].forEach(function (k) { $("view-" + k).hidden = k !== v; });
+    $("dock").hidden = !(v === "sheet" && !game.revealed);
+    window.scrollTo(0, 0);
+    if (v === "sheet") renderSheet();
+    if (v === "home") renderHome();
+  }
+
+  // ---------- home ----------
+  function renderHome() {
+    $("stat-glasses").textContent = game.wineCount;
+    $("how-n").textContent = game.wineCount;
+    $("stat-tasters").textContent = board.length;
+    $("stat-status").textContent = game.revealed ? "Revealed" : "Sealed";
+    $("prize-inline").textContent = game.prize || "a very nice bottle of wine";
+    $("board-note").textContent = game.revealed ? "Out of " + game.wineCount * 2 + " points" : "Scores appear at the reveal";
+
+    var cta = $("cta");
+    if (!me) cta.textContent = game.revealed ? "Sign in to see your results" : "Join the tasting";
+    else if (game.revealed) cta.textContent = "See my results";
+    else cta.textContent = me.submittedAt ? "Edit my guesses" : "Fill in my tasting sheet";
+    $("who").hidden = !me;
+    if (me) $("who-text").textContent = "Signed in as " + me.name;
+
+    var list = $("board"); list.textContent = "";
+    if (!board.length) { list.appendChild(el("li", { cls: "empty", text: "No sealed sheets yet. Be the first." })); return; }
+
+    var rows = board.map(function (p) { return { p: p, score: game.revealed ? scoreOf(p.guesses, game.answers) : null }; });
+    if (game.revealed) rows.sort(function (a, b) { return b.score - a.score || (a.p.submittedAt < b.p.submittedAt ? -1 : 1); });
+    var best = game.revealed && rows.length ? rows[0].score : null;
+
+    rows.forEach(function (r, i) {
+      var p = r.p;
+      var isMe = me && p.name === me.name && p.submittedAt === me.submittedAt;
+      var nameLine = el("div", { cls: "pname" }, [p.name,
+        isMe ? el("span", { cls: "pill you", text: "You" }) : null,
+        p.sample ? el("span", { cls: "pill sample", text: "Sample" }) : null]);
+      var left = game.revealed ? el("span", { cls: "rank", text: String(i + 1).padStart(2, "0") })
+                               : el("span", { cls: "avatar", text: (p.name || "?").trim().charAt(0).toUpperCase() });
+      var mid = el("div", {}, [nameLine, el("div", { cls: "psub", text: "Sealed " + timeOf(p.submittedAt) })]);
+      var right;
+      if (game.revealed) {
+        right = el("div", { cls: "right" }, [
+          el("div", { cls: "score" }, [String(r.score), el("small", { text: "/" + game.wineCount * 2 })]),
+          r.score === best && best > 0 ? el("span", { cls: "pill win", text: "Winner" }) : null
+        ]);
+      } else right = el("span", { cls: "pill sealed", text: "Sealed" });
+      var li = el("li", { cls: game.revealed && r.score === best && best > 0 ? "top" : "" }, [left, mid, right]);
+      list.appendChild(li);
+    });
+  }
+
+  // ---------- sheet ----------
+  function blankGuesses() { var a = []; for (var i = 0; i < game.wineCount; i++) a.push({ grape: "", region: "" }); return a; }
+  var draft = null;
+  function renderSheet() {
+    if (!me) return show("join");
+    var guesses = blankGuesses();
+    (draft || me.guesses || []).forEach(function (g, i) { if (i < guesses.length && g) guesses[i] = { grape: g.grape || "", region: g.region || "" }; });
+    draft = guesses;
+
+    $("sheet-title").textContent = game.revealed ? me.name + "'s results" : "Your tasting sheet";
+    $("sheet-sub").textContent = game.revealed
+      ? "You scored " + scoreOf(me.guesses, game.answers) + " of " + game.wineCount * 2 + "."
+      : "Grape or blend, then region. Close counts: “Napa” works for Napa Valley.";
+    $("progress").hidden = game.revealed;
+
+    var form = $("sheet-form"); form.textContent = "";
+    guesses.forEach(function (g, i) {
+      var no = el("div", { cls: "glass-no" }, [el("small", { text: "Glass" }), el("b", { text: String(i + 1) })]);
+      var body;
+      if (game.revealed) {
+        var a = (game.answers || [])[i] || {};
+        var mine = (me.guesses || [])[i] || {};
+        var gOk = grapeOk(mine.grape, a.grape), rOk = regionOk(mine.region, a.region);
+        body = el("div", { cls: "result" }, [
+          el("div", { cls: "result-row" }, [el("span", { cls: "mark " + (gOk ? "ok" : "no"), text: gOk ? "✓" : "✗" }),
+            el("div", {}, [a.grape || "—", el("em", { text: "You said: " + (mine.grape || "nothing") })])]),
+          el("div", { cls: "result-row" }, [el("span", { cls: "mark " + (rOk ? "ok" : "no"), text: rOk ? "✓" : "✗" }),
+            el("div", {}, [(a.region || "—").split("/")[0].trim(), el("em", { text: "You said: " + (mine.region || "nothing") })])])
+        ]);
+      } else {
+        var gi = el("input", { cls: "input", id: "g" + i, list: "grapes", placeholder: "Grape", autocomplete: "off", "aria-label": "Glass " + (i + 1) + " grape", maxlength: "60" });
+        var ri = el("input", { cls: "input", id: "r" + i, list: "regions", placeholder: "Region", autocomplete: "off", "aria-label": "Glass " + (i + 1) + " region", maxlength: "60" });
+        gi.value = g.grape; ri.value = g.region;
+        gi.addEventListener("input", function () { draft[i].grape = gi.value; progress(); });
+        ri.addEventListener("input", function () { draft[i].region = ri.value; progress(); });
+        body = el("div", { cls: "fields" }, [gi, ri]);
+      }
+      form.appendChild(el("div", { cls: "glass" }, [no, body]));
+    });
+    progress();
+  }
+  function progress() {
+    if (!draft) return;
+    var filled = draft.filter(function (g) { return g.grape.trim() && g.region.trim(); }).length;
+    $("progress-text").textContent = filled + " of " + draft.length + " glasses";
+    $("progress-bar").style.width = (100 * filled / draft.length) + "%";
+    $("seal-btn").textContent = me && me.submittedAt ? "Update my sealed sheet" : "Seal my guesses";
+  }
+
+  // ---------- host ----------
+  function renderHost(data) {
+    var sel = $("host-count"); sel.textContent = "";
+    for (var n = 1; n <= 12; n++) { var o = el("option", { value: n, text: n + (n === 1 ? " wine" : " wines") }); if (n === data.wineCount) o.selected = true; sel.appendChild(o); }
+    $("host-reveal").checked = !!data.revealed;
+    drawAnswers(data.wineCount, data.answers || []);
+  }
+  function drawAnswers(count, answers) {
+    var box = $("host-answers"); var prev = readAnswers();
+    box.textContent = "";
+    for (var i = 0; i < count; i++) {
+      var a = prev[i] || answers[i] || {};
+      var g = el("input", { cls: "input", id: "ha-g" + i, list: "grapes", placeholder: "Grape", autocomplete: "off", "aria-label": "Wine " + (i + 1) + " grape" });
+      var r = el("input", { cls: "input", id: "ha-r" + i, list: "regions", placeholder: "Region", autocomplete: "off", "aria-label": "Wine " + (i + 1) + " region" });
+      g.value = a.grape || ""; r.value = a.region || "";
+      box.appendChild(el("div", { cls: "host-row" }, [el("b", { text: String(i + 1) }), el("div", { cls: "host-grid" }, [g, r])]));
+    }
+  }
+  function readAnswers() {
+    var out = [], i = 0;
+    while ($("ha-g" + i)) { out.push({ grape: $("ha-g" + i).value.trim(), region: $("ha-r" + i).value.trim() }); i++; }
+    return out;
+  }
+
+  // ---------- data refresh ----------
+  function refresh() {
+    return Promise.all([api.getState(), api.getBoard()]).then(function (res) {
+      game = res[0]; board = res[1] || [];
+      if (view === "home") renderHome();
+    }).catch(function (e) { if (view === "home") toast(e.message); });
+  }
+
+  // ---------- events ----------
+  document.addEventListener("click", function (e) {
+    var go = e.target.closest("[data-go]"); if (go) show(go.getAttribute("data-go"));
+  });
+  $("cta").addEventListener("click", function () { show(me ? "sheet" : "join"); });
+  $("signout").addEventListener("click", function () { me = null; draft = null; store(STORE_KEY, null); renderHome(); });
+  $("host-link").addEventListener("click", function () { show("host"); });
+
+  $("join-form").addEventListener("submit", function (e) {
+    e.preventDefault();
+    var name = $("join-name").value.trim(), phone = normPhone($("join-phone").value);
+    if (!name) { $("join-error").textContent = "Enter your name so friends know who you are."; return; }
+    if (phone.length < 11) { $("join-error").textContent = "Enter a 10-digit phone number, like (555) 555-0123."; return; }
+    $("join-error").textContent = ""; $("join-btn").disabled = true;
+    api.join(name, phone).then(function (p) {
+      me = p; me.phone = phone; draft = null; store(STORE_KEY, phone + "|" + name);
+      show("sheet");
+    }).catch(function (err) { $("join-error").textContent = err.message; })
+      .then(function () { $("join-btn").disabled = false; });
+  });
+
+  $("seal-btn").addEventListener("click", function () {
+    var clean = draft.map(function (g) { return { grape: g.grape.trim(), region: g.region.trim() }; });
+    var blanks = clean.filter(function (g) { return !g.grape || !g.region; }).length;
+    var btn = $("seal-btn"); btn.disabled = true;
+    api.submit(me.phone, clean).then(function (p) {
+      me.guesses = p.guesses; me.submittedAt = p.submittedAt; draft = null;
+      toast(blanks ? "Sealed. You left " + blanks + " glass" + (blanks > 1 ? "es" : "") + " partly blank." : "Sealed. Good luck!");
+      return refresh();
+    }).then(function () { show("home"); })
+      .catch(function (err) { toast(err.message); })
+      .then(function () { btn.disabled = false; });
+  });
+
+  $("pin-form").addEventListener("submit", function (e) {
+    e.preventDefault();
+    var pin = $("host-pin").value.trim();
+    api.hostLoad(pin).then(function (d) {
+      hostPin = pin; $("pin-error").textContent = "";
+      $("pin-form").hidden = true; $("host-form").hidden = false;
+      $("host-answers").textContent = "";
+      renderHost(d);
+    }).catch(function (err) { $("pin-error").textContent = err.message; });
+  });
+  $("host-count").addEventListener("change", function () { drawAnswers(Number($("host-count").value), []); });
+  $("host-form").addEventListener("submit", function (e) {
+    e.preventDefault();
+    var count = Number($("host-count").value), answers = readAnswers(), reveal = $("host-reveal").checked;
+    if (reveal && answers.some(function (a) { return !a.grape || !a.region; })) { $("host-error").textContent = "Fill in every grape and region before revealing."; return; }
+    $("host-error").textContent = "";
+    api.hostSave(hostPin, count, answers, reveal).then(function () {
+      toast(reveal ? "Revealed. Scores are live." : "Saved.");
+      return refresh();
+    }).then(function () { show("home"); }).catch(function (err) { $("host-error").textContent = err.message; });
+  });
+
+  // ---------- boot ----------
+  document.title = NAME + "'s Blind Tasting";
+  $("bday-name").textContent = NAME;
+  $("initial").textContent = NAME.charAt(0).toUpperCase();
+  document.querySelectorAll(".bname").forEach(function (n) { n.textContent = NAME; });
+  if (CFG.eventLabel) $("event-label").textContent = CFG.eventLabel;
+  $("demo").hidden = LIVE;
+  GRAPES.forEach(function (g) { $("grapes").appendChild(el("option", { value: g })); });
+  REGIONS.forEach(function (r) { $("regions").appendChild(el("option", { value: r })); });
+
+  refresh().then(function () {
+    var saved = store(STORE_KEY);
+    if (saved) {
+      var parts = saved.split("|");
+      return api.join(parts.slice(1).join("|"), parts[0]).then(function (p) { me = p; me.phone = parts[0]; renderHome(); }).catch(function () {});
+    }
+  }).then(function () { if (location.hash === "#host") show("host"); });
+  if (LIVE) setInterval(function () { if (view === "home") refresh(); }, 15000);
+})();
+</script>
+<!--APP-END-->
+</body>
+</html>
