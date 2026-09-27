@@ -126,6 +126,12 @@
   .pill.you { color: var(--claret); border-color: #6b2d3c; }
   .pill.sample { color: var(--dust); }
   .board li.top { background: linear-gradient(90deg, rgba(216,180,106,.12), transparent 70%); }
+  .board li.clickable { cursor: pointer; }
+  .board li.clickable:focus-visible { outline: 2px solid var(--foil); outline-offset: -2px; }
+  .board li .detail { grid-column: 1 / -1; margin-top: 6px; border-top: 1px dashed var(--line); }
+  .glass-mini { padding: 10px 0 4px; }
+  .glass-mini + .glass-mini { border-top: 1px solid var(--line); }
+  .gm-head { display: flex; justify-content: space-between; font-family: var(--mono); font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--dust); margin-bottom: 6px; }
   .empty { padding: 24px 16px; color: var(--dust); text-align: center; }
 
   .how { display: grid; gap: 10px; color: var(--dust); font-size: 15px; padding: 0; margin: 0; list-style: none; counter-reset: s; }
@@ -469,6 +475,30 @@
     var list = acceptedGrapes(a); if (!list.length) return "—";
     return list.length === 1 ? list[0] : list.slice(0, -1).join(", ") + " or " + list[list.length - 1];
   }
+  // One glass of results: the answer, what the taster picked, and the points for each line.
+  function resultBlock(a, mine, who) {
+    var gp = grapePts(mine.grape, a), rp = regionPts(mine.region, a);
+    var mark = function (pts) { return el("span", { cls: "mark " + (pts ? "ok" : "no"), text: pts ? "+" + pts : "✗" }); };
+    return el("div", { cls: "result" }, [
+      el("div", { cls: "result-row" }, [mark(gp),
+        el("div", {}, [answerGrapeText(a), el("em", { text: who + (mine.grape || "nothing") })])]),
+      el("div", { cls: "result-row" }, [mark(rp),
+        el("div", {}, [a.region || "—", el("em", { text: who + (mine.region || "nothing") })])])
+    ]);
+  }
+  // Every glass for one taster, for the expandable leaderboard rows.
+  function sheetDetail(guesses, who) {
+    var box = el("div", { cls: "detail" });
+    (game.answers || []).forEach(function (a, i) {
+      var mine = (guesses || [])[i] || {};
+      var pts = grapePts(mine.grape, a) + regionPts(mine.region, a);
+      box.appendChild(el("div", { cls: "glass-mini" }, [
+        el("div", { cls: "gm-head" }, [el("span", { text: "Glass " + (i + 1) }), el("span", { text: pts + " of " + (POINTS.grape + POINTS.region) })]),
+        resultBlock(a, mine, who)
+      ]));
+    });
+    return box;
+  }
   // Dropdown builders. A value that is not in the list (e.g. an old free-text guess) shows as unpicked.
   function grapeSelect(id, value, label, placeholder) {
     var sel = el("select", { cls: "input select", id: id, "aria-label": label });
@@ -495,6 +525,7 @@
   // ---------- state ----------
   var game = { wineCount: 6, revealed: false, prize: "a very nice bottle of wine", answers: null };
   var board = [];
+  var openRows = {}; // leaderboard rows the viewer has expanded, kept across refreshes
   var me = null;
   var hostPin = null;
   var view = "home";
@@ -539,7 +570,10 @@
         p.sample ? el("span", { cls: "pill sample", text: "Sample" }) : null]);
       var left = game.revealed ? el("span", { cls: "rank", text: String(i + 1).padStart(2, "0") })
                                : el("span", { cls: "avatar", text: (p.name || "?").trim().charAt(0).toUpperCase() });
-      var mid = el("div", {}, [nameLine, el("div", { cls: "psub", text: "Sealed " + timeOf(p.submittedAt) })]);
+      var sub = "Sealed " + timeOf(p.submittedAt);
+      var key = p.name + "|" + p.submittedAt;
+      if (game.revealed && p.guesses) sub += (openRows[key] ? " · tap to hide" : " · tap to see their sheet");
+      var mid = el("div", {}, [nameLine, el("div", { cls: "psub", text: sub })]);
       var right;
       if (game.revealed) {
         right = el("div", { cls: "right" }, [
@@ -548,6 +582,14 @@
         ]);
       } else right = el("span", { cls: "pill sealed", text: "Sealed" });
       var li = el("li", { cls: game.revealed && r.score === best && best > 0 ? "top" : "" }, [left, mid, right]);
+      if (game.revealed && p.guesses) {
+        li.classList.add("clickable"); li.setAttribute("role", "button"); li.tabIndex = 0;
+        li.setAttribute("aria-expanded", openRows[key] ? "true" : "false");
+        if (openRows[key]) { li.classList.add("open"); li.appendChild(sheetDetail(p.guesses, isMe ? "You said: " : "They said: ")); }
+        var toggle = function () { if (openRows[key]) delete openRows[key]; else openRows[key] = true; renderHome(); };
+        li.addEventListener("click", toggle);
+        li.addEventListener("keydown", function (e) { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); toggle(); } });
+      }
       list.appendChild(li);
     });
   }
@@ -574,14 +616,7 @@
       if (game.revealed) {
         var a = (game.answers || [])[i] || {};
         var mine = (me.guesses || [])[i] || {};
-        var gp = grapePts(mine.grape, a), rp = regionPts(mine.region, a);
-        var mark = function (pts) { return el("span", { cls: "mark " + (pts ? "ok" : "no"), text: pts ? "+" + pts : "✗" }); };
-        body = el("div", { cls: "result" }, [
-          el("div", { cls: "result-row" }, [mark(gp),
-            el("div", {}, [answerGrapeText(a), el("em", { text: "You said: " + (mine.grape || "nothing") })])]),
-          el("div", { cls: "result-row" }, [mark(rp),
-            el("div", {}, [a.region || "—", el("em", { text: "You said: " + (mine.region || "nothing") })])])
-        ]);
+        body = resultBlock(a, mine, "You said: ");
       } else {
         var gi = grapeSelect("g" + i, g.grape, "Glass " + (i + 1) + " grape", "Pick a grape");
         var ri = regionSelect("r" + i, g.region, "Glass " + (i + 1) + " region", "Pick a region");
